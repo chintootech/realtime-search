@@ -25,11 +25,9 @@ object Application extends Controller {
     Ok(views.html.index("Search logs"))
   }
 
-  def search(searchString: String) = Action {
-    Async {
-      (searchActor ? StartSearch(searchString = searchString)).map {
-        case SearchFeed(out) => Ok.stream(out &> EventSource()).as("text/event-stream")
-      }
+  def search(searchString: String) = Action.async {
+    (searchActor ? StartSearch(searchString = searchString)).map {
+      case SearchFeed(out) => Ok.stream(out &> EventSource()).as("text/event-stream")
     }
   }
 }

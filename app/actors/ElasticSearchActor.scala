@@ -7,6 +7,7 @@ import play.api.libs.json.{JsArray, JsValue, Json}
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import ExecutionContext.Implicits.global
+import play.api.Play.current
 /**
   */
 class ElasticsearchActor extends Actor {
@@ -23,8 +24,9 @@ class ElasticsearchActor extends Actor {
         val body = response.json
         val status = (body \ "ok").as[Boolean]
         if (status) {
-          val matchingIds = (body \ "matches").asInstanceOf[JsArray].value.foldLeft(List[UUID]())((acc, v) => UUID.fromString(v.as[String]) :: acc)
-          if (!matchingIds.isEmpty) {
+          val matches = (body \ "matches").as[JsArray].value
+          val matchingIds = matches.foldLeft(List[UUID]())((acc, v) => UUID.fromString(v.as[String]) :: acc)
+          if (matchingIds.nonEmpty) {
             requestor ! SearchMatch(LogEntry(logJson), matchingIds)
           }
         }
